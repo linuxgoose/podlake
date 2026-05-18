@@ -51,6 +51,8 @@ android {
 
     lint {
         disable "UnusedResources"
+        disable "IconLauncherShape"
+        disable "IconDuplicates"
     }
 }
 

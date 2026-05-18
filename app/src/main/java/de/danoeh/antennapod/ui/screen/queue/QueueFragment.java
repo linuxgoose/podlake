@@ -468,7 +468,8 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 if (longPressedItem != null && activeQueue != null) {
                     MenuItem defaultQueueItem = menu.findItem(R.id.set_default_queue_for_show_item);
                     if (defaultQueueItem != null) {
-                        boolean clearsDefault = UserPreferences.getFeedDefaultQueue(longPressedItem.getFeedId()) == activeQueue.getId();
+                        boolean clearsDefault = UserPreferences.getFeedDefaultQueue(
+                                longPressedItem.getFeedId()) == activeQueue.getId();
                         defaultQueueItem.setTitle(clearsDefault
                                 ? R.string.clear_default_queue_for_show_label
                                 : R.string.set_default_queue_for_show_label);
@@ -488,7 +489,8 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 Pair<Boolean, Boolean> canMove = canMove(queue, selectedItems);
                 menu.findItem(R.id.move_to_top_item).setVisible(canMove.first);
                 menu.findItem(R.id.move_to_bottom_item).setVisible(canMove.second);
-                menu.findItem(R.id.send_to_queue_item).setVisible(queues != null && queues.size() > 1 && !selectedItems.isEmpty());
+                menu.findItem(R.id.send_to_queue_item)
+                        .setVisible(queues != null && queues.size() > 1 && !selectedItems.isEmpty());
 
                 floatingSelectMenu.updateItemVisibility();
             }
@@ -643,14 +645,14 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 return;
             }
             Observable.fromCallable(() -> {
-                        DBWriter.createQueue(queueName).get();
-                        NamedQueue latestActiveQueue = DBReader.getActiveQueue();
-                        List<NamedQueue> latestQueues = DBReader.getQueues();
-                        List<FeedItem> latestActiveQueueItems = DBReader.getQueue();
-                        Map<Long, String> latestQueueInfoLabels = buildQueueInfoLabels(
-                                latestActiveQueue, latestQueues, latestActiveQueueItems);
-                        return new QueueManagementData(latestActiveQueue, latestQueues, latestQueueInfoLabels);
-                    })
+                DBWriter.createQueue(queueName).get();
+                NamedQueue latestActiveQueue = DBReader.getActiveQueue();
+                List<NamedQueue> latestQueues = DBReader.getQueues();
+                List<FeedItem> latestActiveQueueItems = DBReader.getQueue();
+                Map<Long, String> latestQueueInfoLabels = buildQueueInfoLabels(
+                        latestActiveQueue, latestQueues, latestActiveQueueItems);
+                return new QueueManagementData(latestActiveQueue, latestQueues, latestQueueInfoLabels);
+            })
                     .subscribeOn(Schedulers.computation())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(updatedData -> {
@@ -667,21 +669,21 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
     private void populateQueueManagementList(@NonNull LinearLayout listContainer, @NonNull AlertDialog dialog) {
         listContainer.removeAllViews();
         for (NamedQueue queueOption : queues) {
-            View itemView = LayoutInflater.from(requireContext()).inflate(R.layout.queue_management_item, listContainer, false);
+            View itemView = LayoutInflater.from(requireContext())
+                    .inflate(R.layout.queue_management_item, listContainer, false);
             TextView nameView = itemView.findViewById(R.id.queue_management_name);
             TextView subtitleView = itemView.findViewById(R.id.queue_management_subtitle);
-            TextView currentLabelView = itemView.findViewById(R.id.queue_management_current_label);
-            View openArea = itemView.findViewById(R.id.queue_management_open_area);
-            ImageButton deleteButton = itemView.findViewById(R.id.queue_management_delete);
             nameView.setText(queueOption.getName());
-            boolean isActive = activeQueue != null && activeQueue.getId() == queueOption.getId();
             String queueInfoLabel = queueInfoLabels != null ? queueInfoLabels.get(queueOption.getId()) : null;
             if (queueInfoLabel == null) {
                 queueInfoLabel = getQueueInfoLabel(Collections.emptyList());
             }
             subtitleView.setText(queueInfoLabel);
             subtitleView.setVisibility(View.VISIBLE);
+            boolean isActive = activeQueue != null && activeQueue.getId() == queueOption.getId();
+            TextView currentLabelView = itemView.findViewById(R.id.queue_management_current_label);
             currentLabelView.setVisibility(isActive ? View.VISIBLE : View.GONE);
+            View openArea = itemView.findViewById(R.id.queue_management_open_area);
             openArea.setOnClickListener(v -> {
                 dialog.dismiss();
                 if (!isActive) {
@@ -689,6 +691,7 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 }
             });
             boolean canDelete = queues.size() > 1;
+            ImageButton deleteButton = itemView.findViewById(R.id.queue_management_delete);
             deleteButton.setVisibility(canDelete ? View.VISIBLE : View.INVISIBLE);
             if (canDelete) {
                 deleteButton.setOnClickListener(v -> {
@@ -744,7 +747,8 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 .setTitle(R.string.delete_queue)
                 .setMessage(getString(R.string.delete_queue_confirmation_msg, queueToDelete.getName()))
                 .setNegativeButton(R.string.cancel_label, null)
-                .setPositiveButton(R.string.delete_queue, (dialog, which) -> runQueueTask(DBWriter.deleteQueue(queueToDelete.getId())))
+                .setPositiveButton(R.string.delete_queue,
+                        (dialog, which) -> runQueueTask(DBWriter.deleteQueue(queueToDelete.getId())))
                 .show();
     }
 
@@ -785,8 +789,9 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 .setTitle(R.string.send_to_queue_label)
                 .setSingleChoiceItems(names, 0, (dialog, which) -> selected[0] = which)
                 .setNegativeButton(R.string.cancel_label, null)
-                .setPositiveButton(R.string.confirm_label, (dialog, which) ->
-                        runQueueTask(DBWriter.moveQueueItemsToQueue(selectedItems, targetQueues.get(selected[0]).getId()), onComplete))
+                .setPositiveButton(R.string.confirm_label, (dialog, which) -> runQueueTask(
+                        DBWriter.moveQueueItemsToQueue(selectedItems, targetQueues.get(selected[0]).getId()),
+                        onComplete))
                 .show();
     }
 
@@ -796,9 +801,9 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
 
     private void runQueueTask(Future<?> task, @Nullable Runnable onSuccess) {
         Observable.fromCallable(() -> {
-                    task.get();
-                    return true;
-                })
+            task.get();
+            return true;
+        })
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(success -> {
@@ -821,7 +826,8 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 timeLeft += (long) (itemTimeLeft / playbackSpeed);
             }
         }
-        String episodes = getResources().getQuantityString(R.plurals.num_episodes, queueItems.size(), queueItems.size());
+        String episodes = getResources().getQuantityString(
+                R.plurals.num_episodes, queueItems.size(), queueItems.size());
         String time = Converter.getDurationStringLocalized(getResources(), timeLeft, false);
         return getString(R.string.queue_time_left_label, episodes, time);
     }

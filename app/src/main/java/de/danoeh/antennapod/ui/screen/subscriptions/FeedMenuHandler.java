@@ -107,7 +107,8 @@ public abstract class FeedMenuHandler {
                         return;
                     }
                     if (queues.isEmpty()) {
-                        EventBus.getDefault().post(new MessageEvent(fragment.getString(R.string.no_other_queues_available)));
+                        EventBus.getDefault().post(new MessageEvent(
+                                fragment.getString(R.string.no_other_queues_available)));
                         return;
                     }
                     String[] queueNames = new String[queues.size() + 1];
@@ -129,12 +130,15 @@ public abstract class FeedMenuHandler {
                             .setPositiveButton(R.string.confirm_label, (dialog, which) -> {
                                 if (selected[0] == 0) {
                                     UserPreferences.clearFeedDefaultQueue(selectedFeed.getId());
-                                    EventBus.getDefault().post(new MessageEvent(fragment.getString(R.string.show_default_queue_cleared)));
+                                    EventBus.getDefault().post(new MessageEvent(
+                                            fragment.getString(R.string.show_default_queue_cleared)));
                                 } else {
                                     NamedQueue selectedQueue = queues.get(selected[0] - 1);
                                     UserPreferences.setFeedDefaultQueue(selectedFeed.getId(), selectedQueue.getId());
                                     EventBus.getDefault().post(new MessageEvent(
-                                            fragment.getString(R.string.show_default_queue_set_to, selectedQueue.getName())));
+                                            fragment.getString(
+                                                    R.string.show_default_queue_set_to,
+                                                    selectedQueue.getName())));
                                 }
                             })
                             .show();

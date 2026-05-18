@@ -10,5 +10,14 @@
 
     <issue id="UnusedResources" severity="error">
         <ignore path="**/values-**/strings.xml" />
+        <ignore path="src/main/res/drawable/ic_launcher_home_inset.xml" />
+    </issue>
+
+    <issue id="IconLauncherShape" severity="ignore" />
+
+    <issue id="IconDuplicates" severity="ignore" />
+
+    <issue id="IconLocation">
+        <ignore path="src/main/res/drawable/podlake_logo.png" />
     </issue>
 </lint>

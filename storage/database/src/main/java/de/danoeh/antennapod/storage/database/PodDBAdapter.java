@@ -1345,7 +1345,8 @@ public class PodDBAdapter {
     }
 
     public int getQueueSize(long queueId) {
-        final String query = String.format("SELECT COUNT(%s) FROM %s WHERE %s = ?", KEY_ID, TABLE_NAME_QUEUE, KEY_QUEUE);
+        final String query = String.format("SELECT COUNT(%s) FROM %s WHERE %s = ?",
+                KEY_ID, TABLE_NAME_QUEUE, KEY_QUEUE);
         try (Cursor c = db.rawQuery(query, new String[]{String.valueOf(queueId)})) {
             if (c.moveToFirst()) {
                 return c.getInt(0);
@@ -1699,7 +1700,8 @@ public class PodDBAdapter {
             db.execSQL(CREATE_TABLE_QUEUES);
             db.execSQL(CREATE_TABLE_SIMPLECHAPTERS);
             db.execSQL(CREATE_TABLE_FAVORITES);
-            db.execSQL("INSERT INTO " + TABLE_NAME_QUEUES + " (" + KEY_NAME + ", " + KEY_STATE + ") VALUES ('Queue', 1)");
+            db.execSQL("INSERT INTO " + TABLE_NAME_QUEUES + " (" + KEY_NAME + ", " + KEY_STATE
+                    + ") VALUES ('Queue', 1)");
 
             db.execSQL(CREATE_INDEX_FEEDITEMS_FEED);
             db.execSQL(CREATE_INDEX_FEEDITEMS_PUBDATE);
