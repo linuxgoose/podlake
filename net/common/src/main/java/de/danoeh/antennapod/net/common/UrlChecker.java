@@ -29,7 +29,7 @@ public final class UrlChecker {
 
     private static final String AP_SUBSCRIBE = "antennapod-subscribe://";
     private static final String AP_SUBSCRIBE_DEEPLINK = "antennapod.org/deeplink/subscribe";
-    private static final String PODLAKE_SUBSCRIBE_DEEPLINK = "podlake.io/deeplink/subscribe";
+    private static final String PODLAKE_SUBSCRIBE_DEEPLINK = "podlake.github.io/deeplink/subscribe";
 
     /**
      * Checks if URL is valid and modifies it if necessary.
@@ -55,8 +55,9 @@ public final class UrlChecker {
         } else if (lowerCaseUrl.startsWith(AP_SUBSCRIBE)) {
             Log.d(TAG, "Removing antennapod-subscribe://");
             return prepareUrl(url.substring(AP_SUBSCRIBE.length()));
-        } else if (lowerCaseUrl.contains(AP_SUBSCRIBE_DEEPLINK)) {
-            Log.d(TAG, "Removing " + AP_SUBSCRIBE_DEEPLINK);
+        } else if (lowerCaseUrl.contains(AP_SUBSCRIBE_DEEPLINK)
+                || lowerCaseUrl.contains(PODLAKE_SUBSCRIBE_DEEPLINK)) {
+            Log.d(TAG, "Removing deeplink subscribe URL");
             String query = Uri.parse(url).getQueryParameter("url");
             try {
                 return prepareUrl(URLDecoder.decode(query, "UTF-8"));
