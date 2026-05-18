@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Podlake Docs</title>
+  <meta name="description" content="Podlake documentation and feature guide.">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #5b6473;
+      --accent: #2563eb;
+      --border: #e5e7eb;
+      --max-width: 900px;
+      --radius: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1020;
+        --surface: #121a2c;
+        --text: #e6ebf4;
+        --muted: #a3adbf;
+        --accent: #7aa2ff;
+        --border: #26324a;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      width: min(var(--max-width), 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-inner {
+      width: min(var(--max-width), 100%);
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      display: block;
+    }
+
+    nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .hero,
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-top: 14px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    .cta-row {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.4rem;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 1.02rem;
+    }
+
+    ul,
+    ol {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .feature-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-top: 8px;
+    }
+
+    .feature {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .feature h3 {
+      margin-top: 0;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.92em;
+    }
+
+    footer {
+      color: var(--muted);
+      text-align: center;
+      padding: 24px 20px 30px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <img class="brand-logo" src="https://raw.githubusercontent.com/linuxgoose/podlake-android/develop/app/podlake_logo_transparent.png" alt="Podlake logo">
+        <span>Podlake Docs</span>
+      </div>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#getting-started">Getting Started</a>
+        <a href="#how-to-use">How To Use</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Open-source podcast listening, your way</h1>
+      <p>
+        Podlake is a free Android podcast app focused on queue management,
+        smooth playback controls, and privacy-friendly defaults.
+        This guide covers the core features and practical workflows.
+      </p>
+      <p><strong>Highlight:</strong> Podlake supports multiple queues so you can separate daily episodes, deep dives, and topic-based listening plans.</p>
+      <div class="cta-row">
+        <a class="button primary" href="https://github.com/linuxgoose/podlake-android">View on GitHub</a>
+        <a class="button" href="https://github.com/linuxgoose/podlake-android/blob/develop/README.md">Project README</a>
+      </div>
+    </section>
+
+    <section id="features">
+      <h2>Core Features</h2>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>Multi-Queue Support</h3>
+          <p>Create and manage multiple queues for different moods, topics, and priorities.</p>
+        </article>
+        <article class="feature">
+          <h3>Podcast Subscriptions</h3>
+          <p>Add podcasts via search, RSS URL, or OPML import and keep your library in sync.</p>
+        </article>
+        <article class="feature">
+          <h3>Queue and Playback Control</h3>
+          <p>Manage each queue with playback speed, sleep timer, and skip controls.</p>
+        </article>
+        <article class="feature">
+          <h3>Offline Listening</h3>
+          <p>Download episodes for travel and unstable networks, then listen without streaming.</p>
+        </article>
+        <article class="feature">
+          <h3>Discovery and Search</h3>
+          <p>Find new podcasts by browsing categories and searching for topics, shows, or creators.</p>
+        </article>
+        <article class="feature">
+          <h3>Privacy Friendly</h3>
+          <p>Podlake is open source and gives you direct control over app behavior and storage.</p>
+        </article>
+        <article class="feature">
+          <h3>Import and Export</h3>
+          <p>Move your subscriptions across devices with OPML and backup-friendly workflows.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="getting-started">
+      <h2>Getting Started</h2>
+      <ol>
+        <li>Install Podlake on Android.</li>
+        <li>Open the app and grant storage or notification permissions if prompted.</li>
+        <li>Add your first podcast through search or by pasting a feed URL.</li>
+        <li>Create your first queue and add episodes to it.</li>
+        <li>Configure playback speed and download preferences in Settings.</li>
+        <li>Start listening from your selected queue.</li>
+      </ol>
+
+      <h3>Import from another app</h3>
+      <ol>
+        <li>Export an OPML file from your current podcast app.</li>
+        <li>In Podlake, open the import screen from Settings.</li>
+        <li>Select your OPML file and confirm the feed import.</li>
+      </ol>
+    </section>
+
+    <section id="how-to-use">
+      <h2>How To Use Podlake</h2>
+
+      <h3>Find and follow podcasts</h3>
+      <ul>
+        <li>Use Discover or Search to find shows by name or keyword.</li>
+        <li>Open a podcast page and tap subscribe.</li>
+        <li>Use categories and filters to keep your subscriptions organized.</li>
+      </ul>
+
+      <h3>Build and manage multiple queues</h3>
+      <ul>
+        <li>Create dedicated queues like <code>Daily</code>, <code>Deep Dives</code>, or <code>News</code>.</li>
+        <li>Add episodes from any list to the queue you want.</li>
+        <li>Reorder items within each queue to control what plays next.</li>
+        <li>Use auto-download options to keep active queues ready offline.</li>
+      </ul>
+
+      <h3>Tune playback</h3>
+      <ul>
+        <li>Adjust playback speed for long-form or short-form content.</li>
+        <li>Set skip-forward and skip-back intervals to match your listening style.</li>
+        <li>Use the sleep timer for nighttime listening.</li>
+      </ul>
+
+      <h3>Manage storage</h3>
+      <ul>
+        <li>Set download limits and cleanup rules in Settings.</li>
+        <li>Delete completed or unneeded episodes to free storage.</li>
+        <li>Use Wi-Fi-only downloads if you want to avoid mobile data use.</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2>FAQ</h2>
+
+      <h3>Where do I report issues?</h3>
+      <p>
+        Use the issue tracker at
+        <a href="https://github.com/linuxgoose/podlake-android/issues">github.com/linuxgoose/podlake-android/issues</a>.
+      </p>
+
+      <h3>Where can I request features or discuss ideas?</h3>
+      <p>
+        Start a discussion at
+        <a href="https://github.com/linuxgoose/podlake-android/discussions">github.com/linuxgoose/podlake-android/discussions</a>.
+      </p>
+
+      <h3>Is Podlake open source?</h3>
+      <p>
+        Yes. Podlake is open source and published under the GPL-3.0 license.
+      </p>
+
+      <h3>Can I contribute?</h3>
+      <p>
+        Yes. Start with the contribution guide in <code>CONTRIBUTING.md</code>.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    Podlake documentation site, built as static HTML for GitHub Pages.
+  </footer>
+</body>
+</html>
+
