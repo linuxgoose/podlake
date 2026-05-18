@@ -13,11 +13,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -40,7 +45,10 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
 
 import de.danoeh.antennapod.R;
 import de.danoeh.antennapod.activity.MainActivity;
@@ -63,6 +71,7 @@ import de.danoeh.antennapod.ui.episodeslist.FeedItemMenuHandler;
 import de.danoeh.antennapod.model.feed.FeedItem;
 import de.danoeh.antennapod.model.feed.FeedItemFilter;
 import de.danoeh.antennapod.model.feed.SortOrder;
+import de.danoeh.antennapod.storage.database.NamedQueue;
 import de.danoeh.antennapod.storage.preferences.UserPreferences;
 import de.danoeh.antennapod.ui.view.EmptyViewHandler;
 import de.danoeh.antennapod.ui.episodeslist.EpisodeItemListRecyclerView;
@@ -102,6 +111,9 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
 
     private FloatingSelectMenu floatingSelectMenu;
     private ProgressBar progressBar;
+    private NamedQueue activeQueue;
+    private List<NamedQueue> queues;
+    private Map<Long, String> queueInfoLabels;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -293,6 +305,9 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
         } else if (itemId == R.id.queue_sort) {
             new QueueSortDialog().show(getChildFragmentManager().beginTransaction(), "SortDialog");
             return true;
+        } else if (itemId == R.id.manage_queues) {
+            showQueueManagementDialog();
+            return true;
         } else if (itemId == R.id.refresh_item) {
             FeedUpdateManager.getInstance().runOnceOrAsk(requireContext());
             return true;
@@ -395,6 +410,12 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 recyclerAdapter.notifyItemMoved(position, queue.size() - 1);
                 DBWriter.moveQueueItemsToBottom(Collections.singletonList(selectedItem));
                 return true;
+            } else if (itemId == R.id.send_to_queue_item) {
+                showSendToQueueDialog(Collections.singletonList(selectedItem), null);
+                return true;
+            } else if (itemId == R.id.set_default_queue_for_show_item) {
+                toggleDefaultQueueForShow(selectedItem);
+                return true;
             }
         }
         return FeedItemMenuHandler.onMenuItemClicked(this, item.getItemId(), selectedItem);
@@ -443,6 +464,16 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
             @Override
             public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
                 super.onCreateContextMenu(menu, v, menuInfo);
+                FeedItem longPressedItem = getLongPressedItem();
+                if (longPressedItem != null && activeQueue != null) {
+                    MenuItem defaultQueueItem = menu.findItem(R.id.set_default_queue_for_show_item);
+                    if (defaultQueueItem != null) {
+                        boolean clearsDefault = UserPreferences.getFeedDefaultQueue(longPressedItem.getFeedId()) == activeQueue.getId();
+                        defaultQueueItem.setTitle(clearsDefault
+                                ? R.string.clear_default_queue_for_show_label
+                                : R.string.set_default_queue_for_show_label);
+                    }
+                }
                 MenuItemUtils.setOnClickListeners(menu, QueueFragment.this::onContextItemSelected);
             }
 
@@ -457,6 +488,7 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 Pair<Boolean, Boolean> canMove = canMove(queue, selectedItems);
                 menu.findItem(R.id.move_to_top_item).setVisible(canMove.first);
                 menu.findItem(R.id.move_to_bottom_item).setVisible(canMove.second);
+                menu.findItem(R.id.send_to_queue_item).setVisible(queues != null && queues.size() > 1 && !selectedItems.isEmpty());
 
                 floatingSelectMenu.updateItemVisibility();
             }
@@ -482,6 +514,10 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 EventBus.getDefault().post(new MessageEvent(getString(R.string.no_items_selected_message)));
                 return false;
             }
+            if (menuItem.getItemId() == R.id.send_to_queue_item) {
+                showSendToQueueDialog(recyclerAdapter.getSelectedItems(), recyclerAdapter::endSelectMode);
+                return true;
+            }
             new EpisodeMultiSelectActionHandler(getActivity(), menuItem.getItemId())
                     .handleAction(recyclerAdapter.getSelectedItems());
             recyclerAdapter.endSelectMode();
@@ -497,20 +533,7 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
     }
 
     private void refreshInfoBar() {
-        long timeLeft = 0;
-        for (FeedItem item : queue) {
-            float playbackSpeed = 1;
-            if (UserPreferences.timeRespectsSpeed()) {
-                playbackSpeed = PlaybackSpeedUtils.getCurrentPlaybackSpeed(item.getMedia());
-            }
-            if (item.getMedia() != null) {
-                long itemTimeLeft = item.getMedia().getDuration() - item.getMedia().getPosition();
-                timeLeft += (long) (itemTimeLeft / playbackSpeed);
-            }
-        }
-        String episodes = getResources().getQuantityString(R.plurals.num_episodes, queue.size(), queue.size());
-        String time = Converter.getDurationStringLocalized(getResources(), timeLeft, false);
-        infoBar.setText(getString(R.string.queue_time_left_label, episodes, time));
+        infoBar.setText(getQueueInfoLabel(queue));
 
         if (recyclerAdapter.inActionMode()) {
             infoBar.setVisibility(View.INVISIBLE);
@@ -529,14 +552,25 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
         }
         disposable = Observable.fromCallable(() -> {
             boolean displayGoToInboxButton = DBReader.getTotalEpisodeCount(new FeedItemFilter(FeedItemFilter.NEW)) > 0;
-            return new Pair<>(DBReader.getQueue(), displayGoToInboxButton);
+            List<FeedItem> activeQueueItems = DBReader.getQueue();
+            NamedQueue activeQueue = DBReader.getActiveQueue();
+            List<NamedQueue> queues = DBReader.getQueues();
+            Map<Long, String> queueInfoLabels = buildQueueInfoLabels(activeQueue, queues, activeQueueItems);
+            return new QueueLoadData(activeQueueItems, displayGoToInboxButton,
+                    activeQueue, queues, queueInfoLabels);
         })
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(itemsAndDisplayButton -> {
+                .subscribe(data -> {
                     final boolean restoreScrollPosition = queue == null || queue.isEmpty();
-                    queue = itemsAndDisplayButton.first;
-                    if (itemsAndDisplayButton.second) {
+                    queue = data.queue;
+                    activeQueue = data.activeQueue;
+                    queues = data.queues;
+                    queueInfoLabels = data.queueInfoLabels;
+                    if (activeQueue != null) {
+                        toolbar.setTitle(activeQueue.getName());
+                    }
+                    if (data.displayGoToInboxButton) {
                         emptyView.setMessage(R.string.no_queue_items_inbox_has_items_label);
                         emptyView.setButtonText(R.string.no_queue_items_inbox_has_items_button_label);
                         emptyView.setButtonVisibility(View.VISIBLE);
@@ -553,6 +587,290 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                     }
                     refreshInfoBar();
                 }, error -> Log.e(TAG, Log.getStackTraceString(error)));
+    }
+
+    private void showSwitchQueueDialog() {
+        if (queues == null || queues.isEmpty()) {
+            return;
+        }
+        String[] names = new String[queues.size()];
+        int checkedItem = 0;
+        for (int i = 0; i < queues.size(); i++) {
+            names[i] = queues.get(i).getName();
+            if (activeQueue != null && queues.get(i).getId() == activeQueue.getId()) {
+                checkedItem = i;
+            }
+        }
+        final int[] selected = {checkedItem};
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.switch_queue)
+                .setSingleChoiceItems(names, checkedItem, (dialog, which) -> selected[0] = which)
+                .setNegativeButton(R.string.cancel_label, null)
+                .setPositiveButton(R.string.confirm_label, (dialog, which) -> {
+                    long selectedQueueId = queues.get(selected[0]).getId();
+                    runQueueTask(DBWriter.switchQueue(selectedQueueId));
+                })
+                .show();
+    }
+
+    private void showQueueManagementDialog() {
+        if (queues == null || queues.isEmpty()) {
+            return;
+        }
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.queue_management_dialog, null);
+        ScrollView scrollView = dialogView.findViewById(R.id.queue_management_scroll);
+        int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
+        int minListHeightPx = (int) (screenHeightPx * 0.30f);
+        int preferredListHeightPx = (int) (screenHeightPx * 0.45f);
+        int reservedDialogChromePx = (int) (getResources().getDisplayMetrics().density * 220);
+        int maxHeightPx = Math.min(preferredListHeightPx,
+                Math.max(minListHeightPx, screenHeightPx - reservedDialogChromePx));
+        ViewGroup.LayoutParams scrollParams = scrollView.getLayoutParams();
+        scrollParams.height = maxHeightPx;
+        scrollView.setLayoutParams(scrollParams);
+        LinearLayout listContainer = dialogView.findViewById(R.id.queue_management_list);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.manage_queues)
+                .setView(dialogView)
+                .setNegativeButton(R.string.cancel_label, null)
+                .create();
+        populateQueueManagementList(listContainer, dialog);
+        EditText addQueueInput = dialogView.findViewById(R.id.queue_management_add_input);
+        ImageButton addQueueButton = dialogView.findViewById(R.id.queue_management_add_confirm);
+        addQueueButton.setOnClickListener(v -> {
+            String queueName = addQueueInput.getText().toString().trim();
+            if (queueName.isEmpty()) {
+                return;
+            }
+            Observable.fromCallable(() -> {
+                        DBWriter.createQueue(queueName).get();
+                        NamedQueue latestActiveQueue = DBReader.getActiveQueue();
+                        List<NamedQueue> latestQueues = DBReader.getQueues();
+                        List<FeedItem> latestActiveQueueItems = DBReader.getQueue();
+                        Map<Long, String> latestQueueInfoLabels = buildQueueInfoLabels(
+                                latestActiveQueue, latestQueues, latestActiveQueueItems);
+                        return new QueueManagementData(latestActiveQueue, latestQueues, latestQueueInfoLabels);
+                    })
+                    .subscribeOn(Schedulers.computation())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(updatedData -> {
+                        activeQueue = updatedData.activeQueue;
+                        queues = updatedData.queues;
+                        queueInfoLabels = updatedData.queueInfoLabels;
+                        addQueueInput.setText("");
+                        populateQueueManagementList(listContainer, dialog);
+                    }, error -> Log.e(TAG, Log.getStackTraceString(error)));
+        });
+        dialog.show();
+    }
+
+    private void populateQueueManagementList(@NonNull LinearLayout listContainer, @NonNull AlertDialog dialog) {
+        listContainer.removeAllViews();
+        for (NamedQueue queueOption : queues) {
+            View itemView = LayoutInflater.from(requireContext()).inflate(R.layout.queue_management_item, listContainer, false);
+            TextView nameView = itemView.findViewById(R.id.queue_management_name);
+            TextView subtitleView = itemView.findViewById(R.id.queue_management_subtitle);
+            TextView currentLabelView = itemView.findViewById(R.id.queue_management_current_label);
+            View openArea = itemView.findViewById(R.id.queue_management_open_area);
+            ImageButton deleteButton = itemView.findViewById(R.id.queue_management_delete);
+            nameView.setText(queueOption.getName());
+            boolean isActive = activeQueue != null && activeQueue.getId() == queueOption.getId();
+            String queueInfoLabel = queueInfoLabels != null ? queueInfoLabels.get(queueOption.getId()) : null;
+            if (queueInfoLabel == null) {
+                queueInfoLabel = getQueueInfoLabel(Collections.emptyList());
+            }
+            subtitleView.setText(queueInfoLabel);
+            subtitleView.setVisibility(View.VISIBLE);
+            currentLabelView.setVisibility(isActive ? View.VISIBLE : View.GONE);
+            openArea.setOnClickListener(v -> {
+                dialog.dismiss();
+                if (!isActive) {
+                    runQueueTask(DBWriter.switchQueue(queueOption.getId()));
+                }
+            });
+            boolean canDelete = queues.size() > 1;
+            deleteButton.setVisibility(canDelete ? View.VISIBLE : View.INVISIBLE);
+            if (canDelete) {
+                deleteButton.setOnClickListener(v -> {
+                    dialog.dismiss();
+                    showDeleteQueueDialog(queueOption);
+                });
+            }
+            listContainer.addView(itemView);
+        }
+    }
+
+    private void showCreateQueueDialog() {
+        final EditText input = new EditText(requireContext());
+        input.setHint(R.string.queue_name);
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.create_queue_title)
+                .setView(input)
+                .setNegativeButton(R.string.cancel_label, null)
+                .setPositiveButton(R.string.create_queue, (dialog, which) -> {
+                    String queueName = input.getText().toString().trim();
+                    if (!queueName.isEmpty()) {
+                        runQueueTask(DBWriter.createQueue(queueName));
+                    }
+                })
+                .show();
+    }
+
+    private void showRenameQueueDialog() {
+        if (activeQueue == null) {
+            return;
+        }
+        final EditText input = new EditText(requireContext());
+        input.setText(activeQueue.getName());
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.rename_queue_title)
+                .setView(input)
+                .setNegativeButton(R.string.cancel_label, null)
+                .setPositiveButton(R.string.rename_queue, (dialog, which) -> {
+                    String queueName = input.getText().toString().trim();
+                    if (!queueName.isEmpty()) {
+                        runQueueTask(DBWriter.renameQueue(activeQueue.getId(), queueName));
+                    }
+                })
+                .show();
+    }
+
+    private void showDeleteQueueDialog(@NonNull NamedQueue queueToDelete) {
+        if (queues != null && queues.size() <= 1) {
+            EventBus.getDefault().post(new MessageEvent(getString(R.string.cannot_delete_last_queue)));
+            return;
+        }
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.delete_queue)
+                .setMessage(getString(R.string.delete_queue_confirmation_msg, queueToDelete.getName()))
+                .setNegativeButton(R.string.cancel_label, null)
+                .setPositiveButton(R.string.delete_queue, (dialog, which) -> runQueueTask(DBWriter.deleteQueue(queueToDelete.getId())))
+                .show();
+    }
+
+    private void toggleDefaultQueueForShow(FeedItem selectedItem) {
+        if (activeQueue == null) {
+            return;
+        }
+        if (UserPreferences.getFeedDefaultQueue(selectedItem.getFeedId()) == activeQueue.getId()) {
+            UserPreferences.clearFeedDefaultQueue(selectedItem.getFeedId());
+            EventBus.getDefault().post(new MessageEvent(getString(R.string.show_default_queue_cleared)));
+        } else {
+            UserPreferences.setFeedDefaultQueue(selectedItem.getFeedId(), activeQueue.getId());
+            EventBus.getDefault().post(new MessageEvent(getString(R.string.show_default_queue_set)));
+        }
+    }
+
+    private void showSendToQueueDialog(List<FeedItem> selectedItems,  Runnable onComplete) {
+        if (activeQueue == null || queues == null || queues.size() <= 1) {
+            EventBus.getDefault().post(new MessageEvent(getString(R.string.no_other_queues_available)));
+            return;
+        }
+        List<NamedQueue> targetQueues = new java.util.ArrayList<>();
+        for (NamedQueue queueOption : queues) {
+            if (queueOption.getId() != activeQueue.getId()) {
+                targetQueues.add(queueOption);
+            }
+        }
+        if (targetQueues.isEmpty()) {
+            EventBus.getDefault().post(new MessageEvent(getString(R.string.no_other_queues_available)));
+            return;
+        }
+        String[] names = new String[targetQueues.size()];
+        for (int i = 0; i < targetQueues.size(); i++) {
+            names[i] = targetQueues.get(i).getName();
+        }
+        final int[] selected = {0};
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.send_to_queue_label)
+                .setSingleChoiceItems(names, 0, (dialog, which) -> selected[0] = which)
+                .setNegativeButton(R.string.cancel_label, null)
+                .setPositiveButton(R.string.confirm_label, (dialog, which) ->
+                        runQueueTask(DBWriter.moveQueueItemsToQueue(selectedItems, targetQueues.get(selected[0]).getId()), onComplete))
+                .show();
+    }
+
+    private void runQueueTask(Future<?> task) {
+        runQueueTask(task, null);
+    }
+
+    private void runQueueTask(Future<?> task, @Nullable Runnable onSuccess) {
+        Observable.fromCallable(() -> {
+                    task.get();
+                    return true;
+                })
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(success -> {
+                    loadItems();
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                }, error -> Log.e(TAG, Log.getStackTraceString(error)));
+    }
+
+    private String getQueueInfoLabel(@NonNull List<FeedItem> queueItems) {
+        long timeLeft = 0;
+        for (FeedItem item : queueItems) {
+            float playbackSpeed = 1;
+            if (UserPreferences.timeRespectsSpeed()) {
+                playbackSpeed = PlaybackSpeedUtils.getCurrentPlaybackSpeed(item.getMedia());
+            }
+            if (item.getMedia() != null) {
+                long itemTimeLeft = item.getMedia().getDuration() - item.getMedia().getPosition();
+                timeLeft += (long) (itemTimeLeft / playbackSpeed);
+            }
+        }
+        String episodes = getResources().getQuantityString(R.plurals.num_episodes, queueItems.size(), queueItems.size());
+        String time = Converter.getDurationStringLocalized(getResources(), timeLeft, false);
+        return getString(R.string.queue_time_left_label, episodes, time);
+    }
+
+    private Map<Long, String> buildQueueInfoLabels(@Nullable NamedQueue activeQueueOption,
+                                                    @NonNull List<NamedQueue> allQueues,
+                                                    @NonNull List<FeedItem> activeQueueItems) {
+        Map<Long, String> labels = new HashMap<>();
+        for (NamedQueue queueOption : allQueues) {
+            List<FeedItem> queueItems = activeQueueOption != null && activeQueueOption.getId() == queueOption.getId()
+                    ? activeQueueItems
+                    : DBReader.getQueue(queueOption.getId());
+            labels.put(queueOption.getId(), getQueueInfoLabel(queueItems));
+        }
+        return labels;
+    }
+
+    private static class QueueLoadData {
+        private final List<FeedItem> queue;
+        private final boolean displayGoToInboxButton;
+        private final NamedQueue activeQueue;
+        private final List<NamedQueue> queues;
+        private final Map<Long, String> queueInfoLabels;
+
+        private QueueLoadData(List<FeedItem> queue,
+                              boolean displayGoToInboxButton,
+                              NamedQueue activeQueue,
+                              List<NamedQueue> queues,
+                              Map<Long, String> queueInfoLabels) {
+            this.queue = queue;
+            this.displayGoToInboxButton = displayGoToInboxButton;
+            this.activeQueue = activeQueue;
+            this.queues = queues;
+            this.queueInfoLabels = queueInfoLabels;
+        }
+    }
+
+    private static class QueueManagementData {
+        private final NamedQueue activeQueue;
+        private final List<NamedQueue> queues;
+        private final Map<Long, String> queueInfoLabels;
+
+        private QueueManagementData(@Nullable NamedQueue activeQueue,
+                                    @NonNull List<NamedQueue> queues,
+                                    @NonNull Map<Long, String> queueInfoLabels) {
+            this.activeQueue = activeQueue;
+            this.queues = queues;
+            this.queueInfoLabels = queueInfoLabels;
+        }
     }
 
     @Override

@@ -120,6 +120,14 @@ public class UrlCheckerTest {
     }
 
     @Test
+    public void testPodlakeSubscribeDeeplink() throws UnsupportedEncodingException {
+        final String feed = "http://example.org/podcast.rss";
+        assertEquals(feed, UrlChecker.prepareUrl("https://podlake.github.io/deeplink/subscribe?url=" + feed));
+        assertEquals(feed, UrlChecker.prepareUrl("http://podlake.github.io/deeplink/subscribe?url=" + feed));
+        assertEquals(feed, UrlChecker.prepareUrl("https://podlake.github.io/deeplink/subscribe?url=" + feed + "&title=a"));
+    }
+
+    @Test
     public void testProtocolRelativeUrlIsAbsolute() {
         final String in = "https://example.com";
         final String inBase = "http://examplebase.com";

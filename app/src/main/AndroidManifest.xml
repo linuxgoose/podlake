@@ -239,6 +239,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:host="antennapod.org" />
+                <data android:host="podlake.github.io" />
                 <data android:pathPrefix="/deeplink/subscribe" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />

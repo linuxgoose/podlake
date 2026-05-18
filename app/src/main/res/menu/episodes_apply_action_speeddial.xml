@@ -74,4 +74,10 @@
         android:title="@string/move_to_bottom_label"
         android:visible="false" />
 
+    <item
+        android:id="@+id/send_to_queue_item"
+        android:icon="@drawable/ic_playlist_play"
+        android:title="@string/send_to_queue_label"
+        android:visible="false" />
+
 </menu>

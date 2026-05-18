@@ -15,6 +15,7 @@ import androidx.preference.PreferenceManager;
 import de.danoeh.antennapod.model.feed.FeedOrder;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,6 +68,7 @@ public abstract class UserPreferences {
     public static final String PREF_QUEUE_KEEP_SORTED = "prefQueueKeepSorted";
     public static final String PREF_QUEUE_KEEP_SORTED_ORDER = "prefQueueKeepSortedOrder";
     public static final String PREF_NEW_EPISODES_ACTION = "prefNewEpisodesAction";
+    private static final String PREF_FEED_DEFAULT_QUEUE = "prefFeedDefaultQueue";
     private static final String PREF_DOWNLOADS_SORTED_ORDER = "prefDownloadSortedOrder";
     private static final String PREF_INBOX_SORTED_ORDER = "prefInboxSortedOrder";
 
@@ -821,6 +823,45 @@ public abstract class UserPreferences {
         String str = prefs.getString(PREF_NEW_EPISODES_ACTION,
                 "" + FeedPreferences.NewEpisodesAction.ADD_TO_INBOX.code);
         return FeedPreferences.NewEpisodesAction.fromCode(Integer.parseInt(str));
+    }
+
+    @NonNull
+    public static String getFeedDefaultQueuePreferenceValue() {
+        return prefs.getString(PREF_FEED_DEFAULT_QUEUE, "{}");
+    }
+
+    public static void setFeedDefaultQueuePreferenceValue(@Nullable String value) {
+        prefs.edit().putString(PREF_FEED_DEFAULT_QUEUE, TextUtils.isEmpty(value) ? "{}" : value).apply();
+    }
+
+    public static long getFeedDefaultQueue(long feedId) {
+        try {
+            JSONObject object = new JSONObject(getFeedDefaultQueuePreferenceValue());
+            return object.optLong(String.valueOf(feedId), -1);
+        } catch (JSONException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+            return -1;
+        }
+    }
+
+    public static void setFeedDefaultQueue(long feedId, long queueId) {
+        try {
+            JSONObject object = new JSONObject(getFeedDefaultQueuePreferenceValue());
+            object.put(String.valueOf(feedId), queueId);
+            setFeedDefaultQueuePreferenceValue(object.toString());
+        } catch (JSONException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
+    }
+
+    public static void clearFeedDefaultQueue(long feedId) {
+        try {
+            JSONObject object = new JSONObject(getFeedDefaultQueuePreferenceValue());
+            object.remove(String.valueOf(feedId));
+            setFeedDefaultQueuePreferenceValue(object.toString());
+        } catch (JSONException e) {
+            Log.e(TAG, Log.getStackTraceString(e));
+        }
     }
 
     /**

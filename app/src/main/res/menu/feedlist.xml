@@ -43,6 +43,12 @@
         android:title="@string/share_label" />
 
     <item
+        android:id="@+id/set_default_queue_for_show_item"
+        android:menuCategory="container"
+        custom:showAsAction="never"
+        android:title="@string/default_queue_label" />
+
+    <item
         android:id="@+id/remove_all_inbox_item"
         android:title="@string/remove_all_inbox_label"
         android:menuCategory="container"
