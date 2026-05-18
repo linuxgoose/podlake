@@ -65,7 +65,7 @@ public class RatingDialogFragment extends DialogFragment {
             new RatingDialogManager(getActivity()).saveRated();
         });
         viewBinding.contibuteButton.setOnClickListener(v -> {
-            IntentUtils.openInBrowser(getContext(), "https://antennapod.org/contribute/");
+            IntentUtils.openInBrowser(getContext(), "https://github.com/linuxgoose/podlake-android");
             new RatingDialogManager(getActivity()).saveRated();
         });
         return viewBinding.getRoot();

@@ -8,7 +8,7 @@
     <string name="general_collapse_button">Collapse</string>
 
     <!-- Activity and fragment titles -->
-    <string name="provider_authority" translatable="false">de.danoeh.antennapod.provider</string>
+    <string name="provider_authority" translatable="false">io.github.linuxgoose.podlake.provider</string>
     <string name="feed_update_receiver_name">Update subscriptions</string>
     <string name="statistics_label">Statistics</string>
     <string name="statistics_label_short">Stats</string>
@@ -632,15 +632,17 @@
 
     <!-- Report bug -->
     <string name="report_bug_title">Report bug</string>
-    <string name="report_bug_message">Sorry to hear something isn’t working. We’d love your help to improve Podlake. Please check our forum or GitHub to see if the issue has already been reported. If not, let us know and we’ll investigate.</string>
+    <string name="report_bug_message">Sorry to hear something isn’t working. We’d love your help to improve Podlake. Please search existing GitHub issues first. If you do not find a match, open a new issue and we’ll investigate.</string>
     <string name="report_bug_device_info_title">Device</string>
     <string name="report_bug_attrib_app_version">App version</string>
     <string name="report_bug_attrib_android_version">Android version</string>
     <string name="report_bug_attrib_device_name">Device Name</string>
     <string name="report_bug_crash_log_title">Crash log</string>
     <string name="report_bug_crash_log_message">Created: %1$s.</string>
-    <string name="report_bug_forum_title">Forum</string>
-    <string name="report_bug_github_title">GitHub</string>
+    <string name="report_bug_forum_title">Search issues</string>
+    <string name="report_bug_github_title">New issue</string>
+    <string name="project_notice_unofficial_version">This application is based on Podlake. The Podlake team does NOT provide support for this unofficial version. If you can read this message, the developers of this modification violate the GNU General Public License (GPL).</string>
+    <string name="project_notice_development_version">This is a development version of Podlake and not meant for daily use</string>
     <string name="pref_advanced">Advanced</string>
     <string name="pref_display">Display</string>
 

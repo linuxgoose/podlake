@@ -39,7 +39,7 @@ public class ShareUtils {
         String feedurl = URLEncoder.encode(feed.getDownloadUrl());
         feedurl = feedurl.replace("htt", "%68%74%74"); // To not confuse users by having a url inside a url
         String text = feed.getTitle() + "\n\n"
-                + "https://antennapod.org/deeplink/subscribe/?url=" + feedurl
+                + "https://podlake.github.io/deeplink/subscribe/?url=" + feedurl
                 + "&title=" + URLEncoder.encode(feed.getTitle());
         shareLink(context, text);
     }
