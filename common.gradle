@@ -41,8 +41,12 @@ android {
     }
 
     tasks.withType(JavaCompile) {
+        def lintArgs = "-Xlint:all,-deprecation,-serial,-this-escape,-unchecked,-processing,-classfile"
+        if (JavaVersion.current().majorVersion.toInteger() >= 23) {
+            lintArgs += ",-dangling-doc-comments"
+        }
         options.compilerArgs.addAll([
-            "-Xlint:all,-deprecation,-serial,-this-escape,-unchecked,-processing,-classfile",
+            lintArgs,
             "-Werror",
         ])
     }
