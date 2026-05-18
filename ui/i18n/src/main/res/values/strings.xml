@@ -392,6 +392,17 @@
     <string name="queue_lock_warning">If you lock the queue, you can no longer swipe or reorder episodes.</string>
     <string name="checkbox_do_not_show_again">Do not show again</string>
     <string name="clear_queue_label">Clear queue</string>
+    <string name="switch_queue">Switch queue</string>
+    <string name="manage_queues">Manage queues</string>
+    <string name="current_queue_label">Current queue</string>
+    <string name="create_queue">Create queue</string>
+    <string name="rename_queue">Rename queue</string>
+    <string name="delete_queue">Delete queue</string>
+    <string name="create_queue_title">Create queue</string>
+    <string name="rename_queue_title">Rename queue</string>
+    <string name="queue_name">Queue name</string>
+    <string name="delete_queue_confirmation_msg">Delete "%1$s" and all episodes in it?</string>
+    <string name="cannot_delete_last_queue">You need at least one queue.</string>
     <string name="undo">Undo</string>
     <string name="move_to_top_label">Move to top</string>
     <plurals name="move_to_top_message">
@@ -399,6 +410,15 @@
         <item quantity="other">%d episodes moved to top.</item>
     </plurals>
     <string name="move_to_bottom_label">Move to bottom</string>
+    <string name="send_to_queue_label">Send to another queue</string>
+    <string name="default_queue_label">Default queue</string>
+    <string name="no_default_queue_label">No default queue</string>
+    <string name="set_default_queue_for_show_label">Set default queue</string>
+    <string name="clear_default_queue_for_show_label">Change default queue</string>
+    <string name="show_default_queue_set">Episodes from this show will be added to this queue after download.</string>
+    <string name="show_default_queue_set_to">New episodes from this show will be added to the %1$s queue after download.</string>
+    <string name="show_default_queue_cleared">This show will no longer use a default queue.</string>
+    <string name="no_other_queues_available">No other queue available.</string>
     <plurals name="move_to_bottom_message">
         <item quantity="one">%d episode moved to bottom.</item>
         <item quantity="other">%d episodes moved to bottom.</item>

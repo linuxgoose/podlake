@@ -355,6 +355,20 @@ class DBUpgrader {
             db.execSQL("DELETE FROM " + PodDBAdapter.TABLE_NAME_FAVORITES + " WHERE " + PodDBAdapter.KEY_FEEDITEM
                     + " NOT IN (SELECT " + PodDBAdapter.KEY_ID + " FROM " + PodDBAdapter.TABLE_NAME_FEED_ITEMS + ")");
         }
+        if (oldVersion < 3110001) {
+            db.execSQL("CREATE TABLE " + PodDBAdapter.TABLE_NAME_QUEUES
+                    + "(" + PodDBAdapter.KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + PodDBAdapter.KEY_NAME + " TEXT UNIQUE,"
+                    + PodDBAdapter.KEY_STATE + " INTEGER DEFAULT 0)");
+            db.execSQL("INSERT INTO " + PodDBAdapter.TABLE_NAME_QUEUES
+                    + " (" + PodDBAdapter.KEY_NAME + ", " + PodDBAdapter.KEY_STATE + ") VALUES ('Queue', 1)");
+            db.execSQL("ALTER TABLE " + PodDBAdapter.TABLE_NAME_QUEUE
+                    + " ADD COLUMN " + PodDBAdapter.KEY_QUEUE + " INTEGER DEFAULT 1");
+            db.execSQL("UPDATE " + PodDBAdapter.TABLE_NAME_QUEUE
+                    + " SET " + PodDBAdapter.KEY_QUEUE + " = 1");
+            db.execSQL("CREATE INDEX " + PodDBAdapter.TABLE_NAME_QUEUE + "_" + PodDBAdapter.KEY_QUEUE
+                    + " ON " + PodDBAdapter.TABLE_NAME_QUEUE + " (" + PodDBAdapter.KEY_QUEUE + ")");
+        }
     }
 
 }

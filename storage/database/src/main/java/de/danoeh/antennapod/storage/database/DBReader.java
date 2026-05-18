@@ -164,7 +164,8 @@ public final class DBReader {
         Log.d(TAG, "getQueueIDList() called");
         PodDBAdapter adapter = PodDBAdapter.getInstance();
         adapter.open();
-        try (Cursor cursor = adapter.getQueueIDCursor()) {
+        long queueId = adapter.getActiveQueueId();
+        try (Cursor cursor = adapter.getQueueIDCursor(queueId)) {
             LongList queueIds = new LongList(cursor.getCount());
             while (cursor.moveToNext()) {
                 queueIds.add(cursor.getLong(0));
@@ -204,7 +205,21 @@ public final class DBReader {
 
         PodDBAdapter adapter = PodDBAdapter.getInstance();
         adapter.open();
-        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getQueueCursor())) {
+        long queueId = adapter.getActiveQueueId();
+        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getQueueCursor(queueId))) {
+            List<FeedItem> items = extractItemlistFromCursor(cursor);
+            loadFeedDataOfFeedItemList(items);
+            return items;
+        } finally {
+            adapter.close();
+        }
+    }
+
+    @NonNull
+    public static synchronized List<FeedItem> getQueue(long queueId) {
+        PodDBAdapter adapter = PodDBAdapter.getInstance();
+        adapter.open();
+        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getQueueCursor(queueId))) {
             List<FeedItem> items = extractItemlistFromCursor(cursor);
             loadFeedDataOfFeedItemList(items);
             return items;
@@ -389,7 +404,8 @@ public final class DBReader {
         Log.d(TAG, "getNextInQueue() called with: " + "itemId = [" + item.getId() + "]");
         PodDBAdapter adapter = PodDBAdapter.getInstance();
         adapter.open();
-        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getNextInQueue(item))) {
+        long queueId = adapter.getActiveQueueId();
+        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getNextInQueue(queueId, item))) {
             List<FeedItem> list = extractItemlistFromCursor(cursor);
             if (!list.isEmpty()) {
                 FeedItem nextItem = list.get(0);
@@ -408,7 +424,8 @@ public final class DBReader {
     public static synchronized List<FeedItem> getPausedQueue(int limit) {
         PodDBAdapter adapter = PodDBAdapter.getInstance();
         adapter.open();
-        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getPausedQueueCursor(limit))) {
+        long queueId = adapter.getActiveQueueId();
+        try (FeedItemCursor cursor = new FeedItemCursor(adapter.getPausedQueueCursor(queueId, limit))) {
             List<FeedItem> items = extractItemlistFromCursor(cursor);
             loadFeedDataOfFeedItemList(items);
             return items;
@@ -716,7 +733,7 @@ public final class DBReader {
         }
 
         Collections.sort(feeds, comparator);
-        final int queueSize = adapter.getQueueSize();
+        final int queueSize = adapter.getQueueSize(adapter.getActiveQueueId());
         final int numNewItems = getTotalEpisodeCount(new FeedItemFilter(FeedItemFilter.NEW));
         final int numDownloadedItems = getTotalEpisodeCount(new FeedItemFilter(FeedItemFilter.DOWNLOADED));
 
@@ -746,6 +763,37 @@ public final class DBReader {
                 queueSize, numNewItems, numDownloadedItems, feedCounters);
         adapter.close();
         return result;
+    }
+
+    @NonNull
+    public static synchronized List<NamedQueue> getQueues() {
+        PodDBAdapter adapter = PodDBAdapter.getInstance();
+        adapter.open();
+        try (Cursor cursor = adapter.getQueuesCursor()) {
+            List<NamedQueue> result = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                result.add(new NamedQueue(cursor.getLong(0), cursor.getString(1)));
+            }
+            return result;
+        } finally {
+            adapter.close();
+        }
+    }
+
+    @Nullable
+    public static synchronized NamedQueue getActiveQueue() {
+        PodDBAdapter adapter = PodDBAdapter.getInstance();
+        adapter.open();
+        try {
+            long queueId = adapter.getActiveQueueId();
+            String queueName = adapter.getQueueName(queueId);
+            if (queueName == null) {
+                return null;
+            }
+            return new NamedQueue(queueId, queueName);
+        } finally {
+            adapter.close();
+        }
     }
 
     public static synchronized List<NavDrawerData.TagItem> getAllTags(int feedState) {

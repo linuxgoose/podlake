@@ -328,6 +328,8 @@ public class FeedItemlistFragment extends Fragment implements AdapterView.OnItem
         } else if (item.getItemId() == R.id.action_search) {
             ((MainActivity) getActivity()).loadChildFragment(SearchFragment.newInstance(feed.getId(), feed.getTitle()));
             return true;
+        } else if (item.getItemId() == R.id.set_default_queue_for_show_item) {
+            return FeedMenuHandler.onMenuItemClicked(this, item.getItemId(), feed);
         }
 
         return FeedMenuHandler.onMenuItemClicked(this, item.getItemId(), feed);
