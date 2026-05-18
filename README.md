@@ -17,7 +17,7 @@ You can use [GitHub Discussions](https://github.com/linuxgoose/podlake-android/d
 Bug reports and feature requests can be submitted [here](https://github.com/linuxgoose/podlake-android/issues) (please read the [instructions](CONTRIBUTING.md) first).
 
 ## Help to test Podlake
-Podlake has many users and we don't want them to run into trouble when we add a new feature. It's important that we have a significant group test our app, so that we know all possible combinations of phones, Android versions and use cases work as expected. Check out our wiki on how to join our [Beta testing program](https://antennapod.org/documentation/general/beta)! If a bug is reported during the beta period, chances are high that it will be fixed before the upcoming stable version. If it is reported later, fixing might take another full beta cycle. So definitely let us know if something is not right.
+Podlake has many users and we don't want them to run into trouble when we add a new feature. It's important that we have a significant group test our app, so that we know all possible combinations of phones, Android versions and use cases work as expected. If a bug is reported during the beta period, chances are high that it will be fixed before the upcoming stable version. If it is reported later, fixing might take another full beta cycle. So definitely let us know if something is not right.
 
 ## License
 
