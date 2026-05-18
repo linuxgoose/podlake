@@ -15,20 +15,25 @@
     <string name="add_feed_label">Add podcast</string>
     <string name="add_feed_label_short">Add</string>
     <string name="episodes_label">Episodes</string>
+    <string name="episodes_label_more" tools:ignore="UnusedResources">Episodes »</string>
     <string name="episodes_label_short">Episodes</string>
     <string name="home_label">Home</string>
     <string name="home_label_short">Home</string>
     <string name="queue_label">Queue</string>
+    <string name="queue_label_more" tools:ignore="UnusedResources">Queue »</string>
     <string name="queue_label_short">Queue</string>
     <string name="inbox_label">Inbox</string>
+    <string name="inbox_label_more" tools:ignore="UnusedResources">Inbox »</string>
     <string name="inbox_label_short">Inbox</string>
     <string name="favorite_episodes_label">Favorites</string>
     <string name="favorite_episodes_label_short">Favorites</string>
     <string name="settings_label">Settings</string>
     <string name="downloads_label">Downloads</string>
+    <string name="downloads_label_more" tools:ignore="UnusedResources">Downloads »</string>
     <string name="downloads_label_short">Downloads</string>
     <string name="downloads_log_label">Download log</string>
     <string name="subscriptions_label">Subscriptions</string>
+    <string name="subscriptions_label_more" tools:ignore="UnusedResources">Subscriptions »</string>
     <string name="subscriptions_label_short">Subscriptions</string>
     <string name="subscriptions_list_label">Subscriptions list</string>
     <string name="cancel_download_label">Cancel download</string>
@@ -368,8 +373,10 @@
     <string name="confirm_mobile_download_dialog_allow_this_time">Download anyway</string>
     <plurals name="mobile_download_notice">
         <item quantity="one">Downloading over mobile data connection for the next %d minute</item>
+        <item quantity="few">Downloading over mobile data connection for the next %d minutes</item>
         <item quantity="other">Downloading over mobile data connection for the next %d minutes</item>
     </plurals>
+    <string name="mobile_download_notice" tools:ignore="UnusedResources">Downloading over mobile data connection for the next %d minutes</string>
     <string name="confirm_mobile_streaming_notification_title">Confirm mobile streaming</string>
     <string name="confirm_mobile_streaming_notification_message">Streaming over mobile data connection is disabled in the settings. Tap to stream anyway.</string>
     <string name="confirm_mobile_streaming_button_always">Always</string>
@@ -436,6 +443,7 @@
     <string name="size">Size</string>
     <string name="clear_queue_confirmation_msg">Please confirm that you want to remove ALL episodes from the queue.</string>
     <string name="queue_time_left_label">%1$s • %2$s left</string>
+    <string name="time_left_label" tools:ignore="UnusedResources">Time left: </string>
 
     <!--  Variable Speed -->
     <string name="speed_presets">Presets</string>
@@ -526,6 +534,8 @@
     <string name="feed_every_72_hours">Every 3 days</string>
     <string name="pref_followQueue_title">Continuous playback</string>
     <string name="pref_pauseOnHeadsetDisconnect_title">Headphones or Bluetooth disconnect</string>
+    <string name="pref_pausePlaybackForFocusLoss_title" tools:ignore="UnusedResources">Pause for interruptions</string>
+    <string name="pref_pausePlaybackForFocusLoss_sum" tools:ignore="UnusedResources">Pause playback instead of lowering volume when another app wants to play audio</string>
     <string name="pref_unpauseOnHeadsetReconnect_title">Headphones reconnect</string>
     <string name="pref_unpauseOnBluetoothReconnect_title">Bluetooth reconnect</string>
     <string name="pref_stream_over_download_title">Prefer streaming</string>
@@ -549,6 +559,7 @@
     <string name="pref_nav_drawer_items_sum">Change which items appear in the navigation drawer or bottom navigation</string>
     <string name="pref_nav_drawer_feed_counter_title">Counter</string>
     <string name="pref_automatic_download_title">Automatic download</string>
+    <string name="auto_download_inbox_category" tools:ignore="UnusedResources">Auto-download episodes from inbox</string>
     <string name="pref_automatic_download_global_description">Automatically download episodes from the inbox. Can be overridden per podcast.</string>
     <string name="pref_automatic_download_queue_title">Download queued</string>
     <string name="pref_automatic_download_queue_description">Automatically download queued episodes</string>
@@ -856,16 +867,22 @@
     <string name="keep_updated_summary">Include this podcast when (auto-)refreshing all podcasts</string>
     <plurals name="statistics_episodes_started">
         <item quantity="one">started</item>
+        <item quantity="few">started</item>
         <item quantity="other">started</item>
     </plurals>
+    <string name="statistics_episodes_started" tools:ignore="UnusedResources">started</string>
     <plurals name="statistics_episodes_total">
         <item quantity="one">total</item>
+        <item quantity="few">total</item>
         <item quantity="other">total</item>
     </plurals>
+    <string name="statistics_episodes_total" tools:ignore="UnusedResources">total</string>
     <plurals name="statistics_episodes_downloaded">
         <item quantity="one">downloaded</item>
+        <item quantity="few">downloaded</item>
         <item quantity="other">downloaded</item>
     </plurals>
+    <string name="statistics_episodes_downloaded" tools:ignore="UnusedResources">downloaded</string>
     <string name="statistics_time_total">total</string>
     <string name="statistics_time_played">played</string>
     <string name="statistics_episodes_space">space taken</string>
