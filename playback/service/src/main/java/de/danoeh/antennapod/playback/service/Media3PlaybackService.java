@@ -1,5 +1,6 @@
 package de.danoeh.antennapod.playback.service;
 
+import android.content.Intent;
 import android.media.audiofx.LoudnessEnhancer;
 import android.os.Bundle;
 import android.util.Log;
@@ -76,6 +77,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Media3PlaybackService extends MediaLibraryService {
     private static final String TAG = "M3PlaybackService";
+    public static final String ACTION_WIDGET_REWIND = "de.danoeh.antennapod.action.WIDGET_REWIND";
+    public static final String ACTION_WIDGET_FAST_FORWARD = "de.danoeh.antennapod.action.WIDGET_FAST_FORWARD";
     private static final long POSITION_SAVE_INTERVAL_MS = 5000;
     private ExoPlayer exoPlayer;
     private Player player;
@@ -164,6 +167,21 @@ public class Media3PlaybackService extends MediaLibraryService {
         mediaSession = new MediaLibraryService.MediaLibrarySession.Builder(this, player, sessionCallback)
                 .setSessionActivity(new MainActivityStarter(this).withOpenPlayer().getPendingIntent())
                 .build();
+    }
+
+    @Override
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        if (intent != null && player != null) {
+            String action = intent.getAction();
+            if (ACTION_WIDGET_REWIND.equals(action)) {
+                player.seekBack();
+                return START_NOT_STICKY;
+            } else if (ACTION_WIDGET_FAST_FORWARD.equals(action)) {
+                player.seekForward();
+                return START_NOT_STICKY;
+            }
+        }
+        return super.onStartCommand(intent, flags, startId);
     }
 
     MediaLibrarySessionCallback sessionCallback = new MediaLibrarySessionCallback(this) {
@@ -759,3 +777,4 @@ public class Media3PlaybackService extends MediaLibraryService {
         }
     }
 }
+

@@ -37,6 +37,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="de.danoeh.antennapod.playback.service.CustomMediaButtonReceiver"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="de.danoeh.antennapod.NOTIFY_BUTTON_RECEIVER" />
             </intent-filter>
