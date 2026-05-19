@@ -50,6 +50,16 @@
     </LinearLayout>
 
     <ImageButton
+        android:id="@+id/queue_management_rename"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_vertical"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/rename_queue"
+        android:padding="12dp"
+        android:src="@drawable/ic_rename" />
+
+    <ImageButton
         android:id="@+id/queue_management_delete"
         android:layout_width="48dp"
         android:layout_height="48dp"
