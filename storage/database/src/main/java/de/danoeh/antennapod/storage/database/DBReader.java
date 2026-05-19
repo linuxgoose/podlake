@@ -404,7 +404,10 @@ public final class DBReader {
         Log.d(TAG, "getNextInQueue() called with: " + "itemId = [" + item.getId() + "]");
         PodDBAdapter adapter = PodDBAdapter.getInstance();
         adapter.open();
-        long queueId = adapter.getActiveQueueId();
+        long queueId = adapter.getQueueIdForItem(item.getId());
+        if (queueId <= 0) {
+            queueId = adapter.getActiveQueueId();
+        }
         try (FeedItemCursor cursor = new FeedItemCursor(adapter.getNextInQueue(queueId, item))) {
             List<FeedItem> list = extractItemlistFromCursor(cursor);
             if (!list.isEmpty()) {
