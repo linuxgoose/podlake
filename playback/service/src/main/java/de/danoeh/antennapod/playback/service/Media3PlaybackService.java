@@ -171,6 +171,7 @@ public class Media3PlaybackService extends MediaLibraryService {
                 .build();
     }
 
+    @UnstableApi
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         if (intent != null && player != null) {
