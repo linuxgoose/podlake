@@ -705,6 +705,25 @@ public class DbWriterTest {
     }
 
     @Test
+    public void testRemoveQueueItemFromAllQueuesRemovesFromInactiveQueue() throws Exception {
+        Feed feed = createTestFeed(3);
+        FeedItem item = feed.getItems().get(0);
+        long[] queueIds = new long[2];
+
+        withPodDB(adapter -> {
+            queueIds[0] = adapter.getActiveQueueId();
+            queueIds[1] = adapter.addQueue("Second queue");
+            adapter.setQueue(queueIds[0], feed.getItems());
+            adapter.setActiveQueueId(queueIds[1]);
+        });
+
+        DBWriter.removeQueueItemFromAllQueues(context, false, item).get(TIMEOUT, TimeUnit.SECONDS);
+
+        List<Long> firstQueueIds = toItemIds(DBReader.getQueue(queueIds[0]));
+        assertFalse(firstQueueIds.contains(item.getId()));
+    }
+
+    @Test
     public void testMoveQueueItem() throws Exception {
         final int numItems = 10;
         Feed feed = new Feed("url", null, "title");

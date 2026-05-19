@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -113,7 +114,7 @@ public class DBWriter {
             EventBus.getDefault().post(new FeedItemEvent(media.getItem() != null
                     ? Collections.singletonList(media.getItem()) : Collections.emptyList(), false));
             if (UserPreferences.shouldDeleteRemoveFromQueue()) {
-                DBWriter.removeQueueItemSynchronous(context, false, media.getItemId());
+                DBWriter.removeQueueItemSynchronous(context, false, false, media.getItemId());
             }
         });
     }
@@ -497,48 +498,78 @@ public class DBWriter {
      */
     public static Future<?> removeQueueItem(final Context context,
                                             final boolean performAutoDownload, final FeedItem item) {
-        return runOnDbThread(() -> removeQueueItemSynchronous(context, performAutoDownload, item.getId()));
+        return runOnDbThread(() -> removeQueueItemSynchronous(context, performAutoDownload, false, item.getId()));
     }
 
     public static Future<?> removeQueueItem(final Context context, final boolean performAutoDownload,
                                             final long... itemIds) {
-        return runOnDbThread(() -> removeQueueItemSynchronous(context, performAutoDownload, itemIds));
+        return runOnDbThread(() -> removeQueueItemSynchronous(context, performAutoDownload, false, itemIds));
+    }
+
+    public static Future<?> removeQueueItemFromAllQueues(final Context context,
+                                                         final boolean performAutoDownload,
+                                                         final FeedItem item) {
+        return runOnDbThread(() -> removeQueueItemSynchronous(context, performAutoDownload, true, item.getId()));
+    }
+
+    public static Future<?> removeQueueItemFromAllQueues(final Context context,
+                                                         final boolean performAutoDownload,
+                                                         final long... itemIds) {
+        return runOnDbThread(() -> removeQueueItemSynchronous(context, performAutoDownload, true, itemIds));
     }
 
     private static void removeQueueItemSynchronous(final Context context,
                                                    final boolean performAutoDownload,
+                                                    final boolean removeFromAllQueues,
                                                    final long... itemIds) {
         if (itemIds.length < 1) {
             return;
         }
         final PodDBAdapter adapter = PodDBAdapter.getInstance();
         adapter.open();
-        long queueId = adapter.getActiveQueueId();
-        final List<FeedItem> queue = DBReader.getQueue();
+        List<Long> queueIds = new ArrayList<>();
+        if (removeFromAllQueues) {
+            for (NamedQueue queue : DBReader.getQueues()) {
+                queueIds.add(queue.getId());
+            }
+        } else {
+            queueIds.add(adapter.getActiveQueueId());
+        }
 
-        boolean queueModified = false;
-        List<QueueEvent> events = new ArrayList<>();
-        List<FeedItem> updatedItems = new ArrayList<>();
-        for (long itemId : itemIds) {
-            int position = indexInItemList(queue, itemId);
-            if (position >= 0) {
-                final FeedItem item = DBReader.getFeedItem(itemId);
-                if (item == null) {
-                    Log.e(TAG, "removeQueueItem - item in queue but somehow cannot be loaded."
-                            + " Item ignored. It should never happen. id:" + itemId);
-                    continue;
+        Map<Long, FeedItem> removedItemsById = new LinkedHashMap<>();
+        for (long queueId : queueIds) {
+            final List<FeedItem> queue = DBReader.getQueue(queueId);
+            boolean queueModified = false;
+            for (long itemId : itemIds) {
+                int position = indexInItemList(queue, itemId);
+                if (position >= 0) {
+                    FeedItem item = removedItemsById.get(itemId);
+                    if (item == null) {
+                        item = DBReader.getFeedItem(itemId);
+                        if (item == null) {
+                            Log.e(TAG, "removeQueueItem - item in queue but somehow cannot be loaded."
+                                    + " Item ignored. It should never happen. id:" + itemId);
+                            continue;
+                        }
+                        removedItemsById.put(itemId, item);
+                    }
+                    queue.remove(position);
+                    queueModified = true;
                 }
-                queue.remove(position);
+            }
+            if (queueModified) {
+                adapter.setQueue(queueId, queue);
+            }
+        }
+
+        if (!removedItemsById.isEmpty()) {
+            List<QueueEvent> events = new ArrayList<>();
+            List<FeedItem> updatedItems = new ArrayList<>();
+            for (FeedItem item : removedItemsById.values()) {
                 item.removeTag(FeedItem.TAG_QUEUE);
                 events.add(QueueEvent.removed(item));
                 updatedItems.add(item);
-                queueModified = true;
-            } else {
-                Log.v(TAG, "removeQueueItem - item  not in queue:" + itemId);
             }
-        }
-        if (queueModified) {
-            adapter.setQueue(queueId, queue);
             for (QueueEvent event : events) {
                 EventBus.getDefault().post(event);
             }

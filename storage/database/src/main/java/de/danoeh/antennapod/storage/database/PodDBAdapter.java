@@ -1416,6 +1416,16 @@ public class PodDBAdapter {
         }
     }
 
+    public long getQueueIdForItem(long itemId) {
+        try (Cursor cursor = db.query(TABLE_NAME_QUEUE, new String[]{KEY_QUEUE}, KEY_FEEDITEM + "=?",
+                new String[]{String.valueOf(itemId)}, null, null, null, "1")) {
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(0);
+            }
+        }
+        return -1;
+    }
+
     public int getQueueCount() {
         try (Cursor c = db.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + TABLE_NAME_QUEUES, null)) {
             if (c.moveToFirst()) {
