@@ -691,6 +691,11 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 }
             });
             boolean canDelete = queues.size() > 1;
+            ImageButton renameButton = itemView.findViewById(R.id.queue_management_rename);
+            renameButton.setOnClickListener(v -> {
+                dialog.dismiss();
+                showRenameQueueDialog(queueOption);
+            });
             ImageButton deleteButton = itemView.findViewById(R.id.queue_management_delete);
             deleteButton.setVisibility(canDelete ? View.VISIBLE : View.INVISIBLE);
             if (canDelete) {
@@ -719,12 +724,9 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 .show();
     }
 
-    private void showRenameQueueDialog() {
-        if (activeQueue == null) {
-            return;
-        }
+    private void showRenameQueueDialog(@NonNull NamedQueue queue) {
         final EditText input = new EditText(requireContext());
-        input.setText(activeQueue.getName());
+        input.setText(queue.getName());
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.rename_queue_title)
                 .setView(input)
@@ -732,7 +734,7 @@ public class QueueFragment extends Fragment implements MaterialToolbar.OnMenuIte
                 .setPositiveButton(R.string.rename_queue, (dialog, which) -> {
                     String queueName = input.getText().toString().trim();
                     if (!queueName.isEmpty()) {
-                        runQueueTask(DBWriter.renameQueue(activeQueue.getId(), queueName));
+                        runQueueTask(DBWriter.renameQueue(queue.getId(), queueName));
                     }
                 })
                 .show();
