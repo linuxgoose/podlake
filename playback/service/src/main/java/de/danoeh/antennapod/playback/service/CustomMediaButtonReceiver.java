@@ -25,6 +25,8 @@ public class CustomMediaButtonReceiver extends BroadcastReceiver {
                 serviceIntent.setAction(Media3PlaybackService.ACTION_WIDGET_REWIND);
             } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD) {
                 serviceIntent.setAction(Media3PlaybackService.ACTION_WIDGET_FAST_FORWARD);
+            } else if (event.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT) {
+                serviceIntent.setAction(Media3PlaybackService.ACTION_WIDGET_SKIP);
             } else {
                 return;
             }

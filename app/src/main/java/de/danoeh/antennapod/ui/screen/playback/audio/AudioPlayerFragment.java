@@ -18,6 +18,7 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.media3.session.MediaController;
+import androidx.media3.session.SessionCommand;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -279,7 +280,8 @@ public class AudioPlayerFragment extends Fragment implements
         });
         butSkip.setOnClickListener(v -> {
             if (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE) {
-                PlaybackController.bindToMedia3Service(getContext(), MediaController::seekToNextMediaItem);
+                PlaybackController.bindToMedia3Service(getContext(), controller ->
+                        controller.sendCustomCommand(new SessionCommand("skip_to_next", Bundle.EMPTY), Bundle.EMPTY));
             } else {
                 getActivity().sendBroadcast(
                         MediaButtonStarter.createIntent(getContext(), KeyEvent.KEYCODE_MEDIA_NEXT));

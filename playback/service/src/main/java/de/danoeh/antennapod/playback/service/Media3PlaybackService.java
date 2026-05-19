@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.media.audiofx.LoudnessEnhancer;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.URLUtil;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -79,6 +80,7 @@ public class Media3PlaybackService extends MediaLibraryService {
     private static final String TAG = "M3PlaybackService";
     public static final String ACTION_WIDGET_REWIND = "de.danoeh.antennapod.action.WIDGET_REWIND";
     public static final String ACTION_WIDGET_FAST_FORWARD = "de.danoeh.antennapod.action.WIDGET_FAST_FORWARD";
+    public static final String ACTION_WIDGET_SKIP = "de.danoeh.antennapod.action.WIDGET_SKIP";
     private static final long POSITION_SAVE_INTERVAL_MS = 5000;
     private ExoPlayer exoPlayer;
     private Player player;
@@ -179,12 +181,29 @@ public class Media3PlaybackService extends MediaLibraryService {
             } else if (ACTION_WIDGET_FAST_FORWARD.equals(action)) {
                 player.seekForward();
                 return START_NOT_STICKY;
+            } else if (ACTION_WIDGET_SKIP.equals(action) && currentPlayable != null) {
+                startNextInQueue(currentPlayable.getItem());
+                return START_NOT_STICKY;
             }
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
     MediaLibrarySessionCallback sessionCallback = new MediaLibrarySessionCallback(this) {
+        @Override
+        @UnstableApi
+        public boolean onMediaButtonEvent(@NonNull MediaSession session,
+                @NonNull MediaSession.ControllerInfo controllerInfo, @NonNull Intent intent) {
+            KeyEvent keyEvent = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN
+                    && keyEvent.getRepeatCount() == 0 && keyEvent.getKeyCode() == KeyEvent.KEYCODE_MEDIA_NEXT
+                    && currentPlayable != null) {
+                startNextInQueue(currentPlayable.getItem());
+                return true;
+            }
+            return super.onMediaButtonEvent(session, controllerInfo, intent);
+        }
+
         @Override
         @NonNull
         @UnstableApi
@@ -777,4 +796,3 @@ public class Media3PlaybackService extends MediaLibraryService {
         }
     }
 }
-

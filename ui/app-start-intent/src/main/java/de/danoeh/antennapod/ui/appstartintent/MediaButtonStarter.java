@@ -12,7 +12,8 @@ public abstract class MediaButtonStarter {
         KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, eventCode);
         boolean useCustomAction = BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE
                 && (eventCode == KeyEvent.KEYCODE_MEDIA_REWIND
-                || eventCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD);
+                || eventCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
+                || eventCode == KeyEvent.KEYCODE_MEDIA_NEXT);
         Intent startingIntent = new Intent(useCustomAction
                 ? INTENT
                 : (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE ? Intent.ACTION_MEDIA_BUTTON : INTENT));
