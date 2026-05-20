@@ -10,8 +10,13 @@ public abstract class MediaButtonStarter {
 
     public static Intent createIntent(Context context, int eventCode) {
         KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, eventCode);
-        Intent startingIntent = new Intent(BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE
-                ? Intent.ACTION_MEDIA_BUTTON : INTENT);
+        boolean useCustomAction = BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE
+                && (eventCode == KeyEvent.KEYCODE_MEDIA_REWIND
+                || eventCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
+                || eventCode == KeyEvent.KEYCODE_MEDIA_NEXT);
+        Intent startingIntent = new Intent(useCustomAction
+                ? INTENT
+                : (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE ? Intent.ACTION_MEDIA_BUTTON : INTENT));
         startingIntent.setPackage(context.getPackageName());
         startingIntent.putExtra(Intent.EXTRA_KEY_EVENT, event);
         return startingIntent;
@@ -19,6 +24,6 @@ public abstract class MediaButtonStarter {
 
     public static PendingIntent createPendingIntent(Context context, int eventCode) {
         return PendingIntent.getBroadcast(context, eventCode, createIntent(context, eventCode),
-                PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }
