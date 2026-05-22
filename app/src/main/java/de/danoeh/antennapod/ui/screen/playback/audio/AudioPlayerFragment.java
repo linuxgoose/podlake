@@ -85,8 +85,6 @@ public class AudioPlayerFragment extends Fragment implements
     public static final int POS_COVER = 0;
     public static final int POS_DESCRIPTION = 1;
     private static final int NUM_CONTENT_FRAGMENTS = 2;
-    private static final long UI_SEEK_SETTLE_WINDOW_MS = 1200;
-    private static final int UI_SEEK_SETTLE_TOLERANCE_MS = 1500;
 
     private TextView txtvPlaybackSpeed;
     private ViewPager2 pager;
@@ -109,10 +107,6 @@ public class AudioPlayerFragment extends Fragment implements
     private boolean showTimeLeft;
     private boolean seekedToChapterStart = false;
     private int currentChapterIndex = -1;
-    private long uiSeekGenerationCounter = 0;
-    private long activeUiSeekGeneration = 0;
-    private long lastUiSeekTimestampMs = 0;
-    private int lastUiSeekTargetDisplayPosition = Playable.INVALID_TIME;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -258,21 +252,11 @@ public class AudioPlayerFragment extends Fragment implements
         int duration = currentMedia.getDuration();
         if (duration > 0) {
             newPosition = Math.min(newPosition, duration);
-            applyUiSeekSettle(newPosition, duration);
+            currentMedia.setPosition(newPosition);
+            updatePosition(new PlaybackPositionEvent(newPosition, duration));
         } else {
             currentMedia.setPosition(newPosition);
         }
-    }
-
-    private void applyUiSeekSettle(int targetPosition, int duration) {
-        float playbackSpeed = PlaybackSpeedUtils.getCurrentPlaybackSpeed(currentMedia);
-        TimeSpeedConverter converter = new TimeSpeedConverter(playbackSpeed);
-        uiSeekGenerationCounter++;
-        activeUiSeekGeneration = uiSeekGenerationCounter;
-        lastUiSeekTimestampMs = System.currentTimeMillis();
-        lastUiSeekTargetDisplayPosition = converter.convert(targetPosition);
-        currentMedia.setPosition(targetPosition);
-        updatePosition(new PlaybackPositionEvent(targetPosition, duration));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -417,17 +401,6 @@ public class AudioPlayerFragment extends Fragment implements
         TimeSpeedConverter converter = new TimeSpeedConverter(playbackSpeed);
         int convertedPosition = converter.convert(event.getPosition());
         int convertedDuration = converter.convert(event.getDuration());
-        if (activeUiSeekGeneration > 0 && lastUiSeekTargetDisplayPosition != Playable.INVALID_TIME) {
-            long elapsed = System.currentTimeMillis() - lastUiSeekTimestampMs;
-            boolean positionCloseToTarget = Math.abs(convertedPosition - lastUiSeekTargetDisplayPosition)
-                    <= UI_SEEK_SETTLE_TOLERANCE_MS;
-            if (elapsed <= UI_SEEK_SETTLE_WINDOW_MS && !positionCloseToTarget) {
-                convertedPosition = lastUiSeekTargetDisplayPosition;
-            } else {
-                activeUiSeekGeneration = 0;
-                lastUiSeekTargetDisplayPosition = Playable.INVALID_TIME;
-            }
-        }
         int remainingTime = converter.convert(Math.max(event.getDuration() - event.getPosition(), 0));
         if (currentMedia != null) {
             currentChapterIndex = Chapter.getAfterPosition(currentMedia.getChapters(), convertedPosition);
@@ -452,7 +425,7 @@ public class AudioPlayerFragment extends Fragment implements
         }
 
         if (!sbPosition.isPressed()) {
-            float progress = convertedDuration > 0 ? ((float) convertedPosition) / convertedDuration : 0;
+            float progress = ((float) event.getPosition()) / event.getDuration();
             sbPosition.setProgress((int) (progress * sbPosition.getMax()));
         }
     }
@@ -516,11 +489,6 @@ public class AudioPlayerFragment extends Fragment implements
             seekedToChapterStart = false;
         } else if (currentMedia != null) {
             final float prog = seekBar.getProgress() / ((float) seekBar.getMax());
-            int duration = currentMedia.getDuration();
-            if (duration > 0) {
-                int targetPosition = (int) (duration * prog);
-                applyUiSeekSettle(targetPosition, duration);
-            }
             if (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE) {
                 PlaybackController.bindToMedia3Service(getContext(), controller ->
                         controller.seekTo((long) (controller.getDuration() * prog)));
