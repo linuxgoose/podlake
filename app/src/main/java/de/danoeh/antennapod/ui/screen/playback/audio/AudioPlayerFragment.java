@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.media3.session.MediaController;
 import androidx.media3.session.SessionCommand;
+import androidx.media3.common.util.Util;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -107,6 +108,7 @@ public class AudioPlayerFragment extends Fragment implements
     private boolean showTimeLeft;
     private boolean seekedToChapterStart = false;
     private int currentChapterIndex = -1;
+    private long currentMediaId = -1;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -190,7 +192,8 @@ public class AudioPlayerFragment extends Fragment implements
     private void setupControlButtons() {
         butRev.setOnClickListener(v -> {
             if (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE) {
-                PlaybackController.bindToMedia3Service(getContext(), MediaController::seekBack);
+                PlaybackController.seekRelativeMedia3(getContext(), currentMedia,
+                        -UserPreferences.getRewindSecs() * 1000);
             } else {
                 PlaybackController.bindToService(getActivity(), playbackService ->
                         playbackService.seekTo(playbackService.getCurrentPosition()
@@ -219,7 +222,8 @@ public class AudioPlayerFragment extends Fragment implements
         });
         butFF.setOnClickListener(v -> {
             if (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE) {
-                PlaybackController.bindToMedia3Service(getContext(), MediaController::seekForward);
+                PlaybackController.seekRelativeMedia3(getContext(), currentMedia,
+                        UserPreferences.getFastForwardSecs() * 1000);
             } else {
                 PlaybackController.bindToService(getActivity(), playbackService ->
                         playbackService.seekTo(playbackService.getCurrentPosition()
@@ -250,7 +254,7 @@ public class AudioPlayerFragment extends Fragment implements
         if (FeedItemEvent.indexOfItemWithId(event.items, currentMedia.getItemId()) != -1) {
             AudioPlayerFragment.this.loadMediaInfo(false);
         }
-        if (event.items.isEmpty()) {
+        if (event.items.isEmpty() && !PlaybackService.isRunning) {
             // The unread update event is sometimes abused to trigger UI updates
             updatePosition(new PlaybackPositionEvent(currentMedia.getPosition(),
                     currentMedia.getDuration()));
@@ -302,6 +306,7 @@ public class AudioPlayerFragment extends Fragment implements
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(media -> {
             currentMedia = media;
+            currentMediaId = media.getId();
             updateUi();
             if (media.getChapters() == null && !includingChapters) {
                 loadMediaInfo(true);
@@ -317,6 +322,10 @@ public class AudioPlayerFragment extends Fragment implements
         updatePlaybackSpeedButton(new SpeedChangedEvent(PlaybackSpeedUtils.getCurrentPlaybackSpeed(currentMedia)));
         setChapterDividers();
         setupOptionsMenu();
+        updatePlayButton();
+    }
+
+    private void updatePlayButton() {
         boolean isPlaying = PlaybackService.isRunning
                 && PlaybackPreferences.getCurrentPlayerStatus() == PlaybackPreferences.PLAYER_STATUS_PLAYING;
         butPlay.setIsShowPlay(!isPlaying);
@@ -324,7 +333,12 @@ public class AudioPlayerFragment extends Fragment implements
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPlayerStatusEvent(PlayerStatusEvent event) {
-        loadMediaInfo(false);
+        long playingMediaId = PlaybackPreferences.getCurrentlyPlayingFeedMediaId();
+        if (currentMedia == null || currentMediaId != playingMediaId) {
+            loadMediaInfo(false);
+        } else {
+            updatePlayButton();
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -435,8 +449,7 @@ public class AudioPlayerFragment extends Fragment implements
                     seekedToChapterStart = true;
                     final int positionFinal = position;
                     if (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE) {
-                        PlaybackController.bindToMedia3Service(getContext(), controller ->
-                                controller.seekTo(positionFinal));
+                        PlaybackController.seekToMedia3(getContext(), currentMedia, positionFinal);
                     } else {
                         PlaybackController.bindToService(getActivity(), playbackService ->
                                 playbackService.seekTo(positionFinal));
@@ -470,8 +483,7 @@ public class AudioPlayerFragment extends Fragment implements
         } else if (currentMedia != null) {
             final float prog = seekBar.getProgress() / ((float) seekBar.getMax());
             if (BuildConfig.USE_MEDIA3_PLAYBACK_SERVICE) {
-                PlaybackController.bindToMedia3Service(getContext(), controller ->
-                        controller.seekTo((long) (controller.getDuration() * prog)));
+                PlaybackController.seekToProgressMedia3(getContext(), currentMedia, prog);
             } else {
                 PlaybackController.bindToService(getActivity(), playbackService ->
                         playbackService.seekTo((int) (playbackService.getDuration() * prog)));

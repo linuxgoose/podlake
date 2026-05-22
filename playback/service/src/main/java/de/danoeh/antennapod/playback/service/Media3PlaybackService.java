@@ -166,6 +166,11 @@ public class Media3PlaybackService extends MediaLibraryService {
             public void seekForward() {
                 seekTo(Math.min(getDuration(), getCurrentPosition() + UserPreferences.getFastForwardSecs() * 1000L));
             }
+
+            @Override
+            public void seekTo(long positionMs) {
+                super.seekTo(positionMs);
+            }
         };
         player.addListener(playerListener);
         mediaSession = new MediaLibraryService.MediaLibrarySession.Builder(this, player, sessionCallback)
@@ -296,8 +301,8 @@ public class Media3PlaybackService extends MediaLibraryService {
                     }
                 }
                 startNextInQueue(media.getItem());
+                EventBus.getDefault().post(new PlayerStatusEvent());
             }
-            EventBus.getDefault().post(new PlayerStatusEvent());
         }
 
         @Override
