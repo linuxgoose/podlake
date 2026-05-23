@@ -239,10 +239,8 @@ public class MediaLibrarySessionCallback implements MediaLibraryService.MediaLib
                 })
                 .subscribeOn(Schedulers.io())
                 .subscribe(result -> {
-                    long startPosition;
-                    if (startPositionMs != C.TIME_UNSET) {
-                        startPosition = startPositionMs;
-                    } else {
+                    long startPosition = startPositionMs;
+                    if (startPosition == C.TIME_UNSET) {
                         startPosition = SkipUtils.skipIntroIfNecessary(context, result.second);
                         startPosition = RewindAfterPauseUtils.calculatePositionWithRewind(
                                 (int) startPosition, result.second.getLastPlayedTimeStatistics());

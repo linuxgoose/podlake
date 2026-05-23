@@ -12,7 +12,7 @@ public class RewindAfterPauseUtilTest {
     @Test
     public void testCalculatePositionWithRewindNoRewind() {
         final int ORIGINAL_POSITION = 10000;
-        long lastPlayed = System.currentTimeMillis();
+        long lastPlayed = System.currentTimeMillis() + 1000;
         int position = RewindAfterPauseUtils.calculatePositionWithRewind(ORIGINAL_POSITION, lastPlayed);
 
         assertEquals(ORIGINAL_POSITION, position);
