@@ -523,6 +523,11 @@ public class Media3PlaybackService extends MediaLibraryService {
                                         .getPreferences().getVolumeAdaptionSetting().getAdaptionFactor();
                                 applyVolumeAdaption(1.0f);
                             }
+                            WidgetUpdater.WidgetState widgetState = new WidgetUpdater.WidgetState(currentPlayable,
+                                    Util.shouldShowPlayButton(player) ? PlayerStatus.PAUSED : PlayerStatus.PLAYING,
+                                    (int) getStablePosition(), (int) player.getDuration(),
+                                    player.getPlaybackParameters().speed);
+                            WidgetUpdater.updateWidget(this, widgetState);
                             updatePlaybackPreferences();
                             EventBus.getDefault().post(new PlayerStatusEvent());
                         },
