@@ -9,9 +9,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import androidx.test.espresso.contrib.RecyclerViewActions;
+
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static de.test.antennapod.EspressoTestUtils.clickPreference;
 
@@ -28,6 +32,8 @@ public class AboutFragmentTest {
         clickPreference(R.string.about_pref);
         onView(withText(R.string.about_pref)).check(matches(isDisplayed()));
         onView(withText(R.string.contributors)).check(matches(isDisplayed()));
+        onView(withId(R.id.recycler_view)).perform(
+                RecyclerViewActions.scrollTo(hasDescendant(withText(R.string.licenses))));
         onView(withText(R.string.licenses)).check(matches(isDisplayed()));
     }
 
