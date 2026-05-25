@@ -60,7 +60,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="16dp"
             android:layout_marginTop="48dp"
-            app:srcCompat="@drawable/podlake_logo" />
+            app:srcCompat="@drawable/ic_launcher_foreground_inset" />
 
         <TextView
             android:id="@+id/titleLabel"
